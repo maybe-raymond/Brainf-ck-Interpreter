@@ -21,6 +21,12 @@ cargo run -- examples/hello_world.bf
 
 Example files are given in the `examples` folder that show some of the programs that can be written in the language.
 
+If you want to see something cool run the following command
+
+```bash
+cargo run -- examples/triangle.bf
+```
+
 ## Future Fixes
 
 - Error handling for array access

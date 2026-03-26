@@ -17,16 +17,17 @@ fn skip_loop(buffer: &Vec<u8>, mut current_instruction: usize) -> usize {
             // for nested loops
             current_instruction += 1;
             current_instruction = skip_loop(&buffer, current_instruction);
+        }else{
+            current_instruction += 1;
         }
 
-        current_instruction += 1;
-    }
+            }
 
     current_instruction
 }
 
 fn interpreter(mut file: File) {
-    const CAPACITY: usize = 16;
+    const CAPACITY: usize = 30000;
 
     let mut memory: [u8; CAPACITY] = [0; CAPACITY]; // memory
     let mut stack = Vec::new(); // to house the instruction to pointer of [ 
@@ -50,17 +51,27 @@ fn interpreter(mut file: File) {
     loop {
         let Some(token) = buffer.get(current_instruction) else {
             println!();
-            println!("{memory:?}");
+           // println!("{memory:?}");
             break;
         };
 
-        //println!("token: {} instruction: {} cell: {}, memory: {}", *token as char, current_instruction, current_memory_pointer, array[current_memory_pointer]);
+        //println!("token: {} instruction: {} cell: {}, memory: {}", *token as char, current_instruction, current_memory_pointer, memory[current_memory_pointer]);
+        //println!("Stack pointer: {stack:?}");
         match token {
             b'>' => {
+                if current_memory_pointer > CAPACITY - 1{
+                    println!("Exceeded memory memory size: overflow");
+                    std::process::exit(0);
+                }
                 current_memory_pointer += 1;
                 current_instruction += 1;
             }
             b'<' => {
+                if current_memory_pointer == 0 {
+                    println!("Exceeded memory memory size: underflow");
+                    std::process::exit(0);
+                }
+
                 current_memory_pointer -= 1;
                 current_instruction += 1;
             }
@@ -82,13 +93,9 @@ fn interpreter(mut file: File) {
                 }
             }
             b']' => {
-                if memory[current_memory_pointer] != 0 {
                     current_instruction = stack
                         .pop()
                         .expect("stack error happened. need to add debuging for later");
-                } else {
-                    current_instruction += 1;
-                }
             }
             b'.' => {
                 print!("{}", memory[current_memory_pointer] as char); // it is buffered and will only flush when full
@@ -127,4 +134,20 @@ fn main() {
         Ok(file) => interpreter(file),
         Err(_) => println!("Could not open file with name {:?}", &args[1]),
     };
+}
+
+
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn nested_loop(){
+        let example_loop = vec![b'[', b'[', b'[', b']', b']', b']', b']'];
+        let instruction = skip_loop(&example_loop, 0);
+        assert_eq!(instruction, 7);
+    }
 }
